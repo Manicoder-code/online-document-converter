@@ -1,5 +1,33 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { convertDocument, SupportedTargetFormat } from "./api";
+
+// Map of what each file type can convert TO
+const SUPPORTED_CONVERSIONS: Record<string, SupportedTargetFormat[]> = {
+  // PDF can convert to images
+  pdf: ["jpg", "png"],
+  
+  // Office docs can convert to PDF and other office formats
+  doc: ["pdf", "docx"],
+  docx: ["pdf", "doc"],
+  ppt: ["pdf", "pptx"],
+  pptx: ["pdf", "ppt"],
+  xls: ["pdf", "xlsx"],
+  xlsx: ["pdf", "xls"],
+  
+  // Images can convert to other image formats
+  jpg: ["png"],
+  jpeg: ["png"],
+  png: ["jpg"],
+};
+
+const FORMAT_LABELS: Record<SupportedTargetFormat, string> = {
+  pdf: "PDF Document",
+  docx: "Word Document (DOCX)",
+  pptx: "PowerPoint (PPTX)",
+  xlsx: "Excel (XLSX)",
+  jpg: "JPG Image",
+  png: "PNG Image",
+};
 
 const App: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -9,11 +37,27 @@ const App: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Get available formats based on uploaded file
+  const availableFormats = useMemo(() => {
+    if (!file) return [];
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+    return SUPPORTED_CONVERSIONS[fileExt] || [];
+  }, [file]);
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] || null;
     setFile(selectedFile);
     setError(null);
     setSuccess(false);
+    
+    // Auto-select first available format for the uploaded file
+    if (selectedFile) {
+      const fileExt = selectedFile.name.split('.').pop()?.toLowerCase() || '';
+      const available = SUPPORTED_CONVERSIONS[fileExt] || [];
+      if (available.length > 0) {
+        setTargetFormat(available[0]);
+      }
+    }
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -24,6 +68,15 @@ const App: React.FC = () => {
     setFile(droppedFile);
     setError(null);
     setSuccess(false);
+    
+    // Auto-select first available format for the dropped file
+    if (droppedFile) {
+      const fileExt = droppedFile.name.split('.').pop()?.toLowerCase() || '';
+      const available = SUPPORTED_CONVERSIONS[fileExt] || [];
+      if (available.length > 0) {
+        setTargetFormat(available[0]);
+      }
+    }
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -47,6 +100,20 @@ const App: React.FC = () => {
     
     if (!file) {
       setError("Please select a file to convert.");
+      return;
+    }
+
+    // Check if file format is supported
+    if (availableFormats.length === 0) {
+      const fileExt = file.name.split('.').pop()?.toUpperCase() || 'this file';
+      setError(`Sorry, ${fileExt} format is not supported for conversion yet.`);
+      return;
+    }
+
+    // Check if trying to convert to same format
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    if (fileExt === targetFormat) {
+      setError(`Cannot convert ${fileExt.toUpperCase()} to ${targetFormat.toUpperCase()}. Please select a different format.`);
       return;
     }
 
@@ -163,7 +230,10 @@ const App: React.FC = () => {
                   <button
                     type="button"
                     className="px-6 py-3 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors"
-                    onClick={handleBrowseClick}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleBrowseClick();
+                    }}
                   >
                     Select File
                   </button>
@@ -199,23 +269,35 @@ const App: React.FC = () => {
             {/* Format Selection */}
             {file && (
               <div className="mt-8 space-y-4">
-                <label className="block">
-                  <span className="text-sm font-medium text-gray-700 mb-2 block">
-                    Convert to:
-                  </span>
-                  <select
-                    value={targetFormat}
-                    onChange={(e) => setTargetFormat(e.target.value as SupportedTargetFormat)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
-                  >
-                    <option value="pdf">PDF Document</option>
-                    <option value="docx">Word Document (DOCX)</option>
-                    <option value="pptx">PowerPoint (PPTX)</option>
-                    <option value="xlsx">Excel (XLSX)</option>
-                    <option value="jpg">JPG Image</option>
-                    <option value="png">PNG Image</option>
-                  </select>
-                </label>
+                {availableFormats.length > 0 ? (
+                  <>
+                    <label className="block">
+                      <span className="text-sm font-medium text-gray-700 mb-2 block">
+                        Convert to:
+                      </span>
+                      <select
+                        value={targetFormat}
+                        onChange={(e) => setTargetFormat(e.target.value as SupportedTargetFormat)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
+                      >
+                        {availableFormats.map((format) => (
+                          <option key={format} value={format}>
+                            {FORMAT_LABELS[format]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </>
+                ) : (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center">
+                      <svg className="h-5 w-5 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <p className="text-sm text-yellow-800">This file format cannot be converted yet.</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Error Message */}
                 {error && (
@@ -244,7 +326,7 @@ const App: React.FC = () => {
                 {/* Convert Button */}
                 <button
                   type="submit"
-                  disabled={isConverting || !file}
+                  disabled={isConverting || !file || availableFormats.length === 0}
                   className="w-full py-4 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-lg"
                 >
                   {isConverting ? (

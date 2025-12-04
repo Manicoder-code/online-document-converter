@@ -6,11 +6,12 @@ ENV STORAGE_DIR=/app/storage
 
 WORKDIR /app
 
-# System dependencies for LibreOffice, ImageMagick & fonts
+# System dependencies for LibreOffice, ImageMagick, Ghostscript & fonts
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libreoffice \
         imagemagick \
+        ghostscript \
         fonts-dejavu \
         locales \
     && rm -rf /var/lib/apt/lists/*
