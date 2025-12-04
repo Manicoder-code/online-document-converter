@@ -4,7 +4,9 @@ import subprocess
 from pathlib import Path
 from typing import Literal
 from PIL import Image
-from PIL import Image
+from pdf2docx import Converter
+import PyPDF2
+from openpyxl import Workbook
 
 # Use /app/storage in Docker, or local ./storage for development
 STORAGE_DIR = Path(os.environ.get("STORAGE_DIR", "./storage"))
@@ -15,15 +17,21 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 CONVERTED_DIR.mkdir(parents=True, exist_ok=True)
 
 # Which conversions we support and how
-ConversionKind = Literal["copy", "libreoffice", "pdf_to_image", "image_convert"]
+ConversionKind = Literal["copy", "libreoffice", "pdf_to_image", "image_convert", "pdf_to_docx", "pdf_to_xlsx", "pdf_to_pptx", "image_to_pdf"]
 
-# NOTE: PDF->DOCX/PPTX/XLSX not supported by headless LibreOffice (no import filters)
+# NOTE: PDF->DOCX/XLSX/PPTX now supported via pdf2docx library
 CONVERSION_MAP: dict[tuple[str, str], ConversionKind] = {
     # PDF conversions
     ("pdf", "pdf"): "copy",
     ("pdf", "jpg"): "pdf_to_image",
     ("pdf", "jpeg"): "pdf_to_image",
     ("pdf", "png"): "pdf_to_image",
+    ("pdf", "docx"): "pdf_to_docx",
+    ("pdf", "doc"): "pdf_to_docx",  # Convert to DOCX then to DOC
+    ("pdf", "xlsx"): "pdf_to_xlsx",
+    ("pdf", "xls"): "pdf_to_xlsx",  # Convert to XLSX then to XLS
+    ("pdf", "pptx"): "pdf_to_pptx",
+    ("pdf", "ppt"): "pdf_to_pptx",  # Convert to PPTX then to PPT
     
     # Office to PDF (works with LibreOffice)
     ("doc", "pdf"): "libreoffice",
@@ -33,13 +41,65 @@ CONVERSION_MAP: dict[tuple[str, str], ConversionKind] = {
     ("xls", "pdf"): "libreoffice",
     ("xlsx", "pdf"): "libreoffice",
     
-    # Office format conversions (same app)
+    # Office format conversions within same category (Word/Excel/PowerPoint)
     ("doc", "docx"): "libreoffice",
     ("docx", "doc"): "libreoffice",
+    ("doc", "doc"): "copy",
+    ("docx", "docx"): "copy",
     ("ppt", "pptx"): "libreoffice",
     ("pptx", "ppt"): "libreoffice",
+    ("ppt", "ppt"): "copy",
+    ("pptx", "pptx"): "copy",
     ("xls", "xlsx"): "libreoffice",
     ("xlsx", "xls"): "libreoffice",
+    ("xls", "xls"): "copy",
+    ("xlsx", "xlsx"): "copy",
+    
+    # Cross-office format conversions (Word to Excel, Excel to PowerPoint, etc.)
+    ("doc", "xlsx"): "libreoffice",
+    ("doc", "xls"): "libreoffice",
+    ("doc", "pptx"): "libreoffice",
+    ("doc", "ppt"): "libreoffice",
+    ("docx", "xlsx"): "libreoffice",
+    ("docx", "xls"): "libreoffice",
+    ("docx", "pptx"): "libreoffice",
+    ("docx", "ppt"): "libreoffice",
+    ("xls", "docx"): "libreoffice",
+    ("xls", "doc"): "libreoffice",
+    ("xls", "pptx"): "libreoffice",
+    ("xls", "ppt"): "libreoffice",
+    ("xlsx", "docx"): "libreoffice",
+    ("xlsx", "doc"): "libreoffice",
+    ("xlsx", "pptx"): "libreoffice",
+    ("xlsx", "ppt"): "libreoffice",
+    ("ppt", "docx"): "libreoffice",
+    ("ppt", "doc"): "libreoffice",
+    ("ppt", "xlsx"): "libreoffice",
+    ("ppt", "xls"): "libreoffice",
+    ("pptx", "docx"): "libreoffice",
+    ("pptx", "doc"): "libreoffice",
+    ("pptx", "xlsx"): "libreoffice",
+    ("pptx", "xls"): "libreoffice",
+    
+    # Office to images (via LibreOffice to PDF, then PDF to image)
+    ("doc", "jpg"): "pdf_to_image",
+    ("doc", "jpeg"): "pdf_to_image",
+    ("doc", "png"): "pdf_to_image",
+    ("docx", "jpg"): "pdf_to_image",
+    ("docx", "jpeg"): "pdf_to_image",
+    ("docx", "png"): "pdf_to_image",
+    ("xls", "jpg"): "pdf_to_image",
+    ("xls", "jpeg"): "pdf_to_image",
+    ("xls", "png"): "pdf_to_image",
+    ("xlsx", "jpg"): "pdf_to_image",
+    ("xlsx", "jpeg"): "pdf_to_image",
+    ("xlsx", "png"): "pdf_to_image",
+    ("ppt", "jpg"): "pdf_to_image",
+    ("ppt", "jpeg"): "pdf_to_image",
+    ("ppt", "png"): "pdf_to_image",
+    ("pptx", "jpg"): "pdf_to_image",
+    ("pptx", "jpeg"): "pdf_to_image",
+    ("pptx", "png"): "pdf_to_image",
     
     # Image format conversions (using Pillow)
     ("jpg", "png"): "image_convert",
@@ -49,6 +109,11 @@ CONVERSION_MAP: dict[tuple[str, str], ConversionKind] = {
     ("jpg", "jpg"): "copy",
     ("jpeg", "jpeg"): "copy",
     ("png", "png"): "copy",
+    
+    # Images to PDF (embed image in PDF)
+    ("jpg", "pdf"): "image_to_pdf",
+    ("jpeg", "pdf"): "image_to_pdf",
+    ("png", "pdf"): "image_to_pdf",
 }
 
 
@@ -115,25 +180,6 @@ def run_image_convert(input_path: Path, target_ext: str) -> Path:
     output_path = CONVERTED_DIR / (input_path.stem + f".{target_ext}")
     try:
         with Image.open(input_path) as img:
-            # Convert RGBA to RGB for JPEG (JPEG doesn't support transparency)
-            if target_ext.lower() in ["jpg", "jpeg"] and img.mode == "RGBA":
-                rgb_img = Image.new("RGB", img.size, (255, 255, 255))
-                rgb_img.paste(img, mask=img.split()[3] if len(img.split()) == 4 else None)
-                rgb_img.save(output_path, "JPEG", quality=95)
-            else:
-                img.save(output_path)
-        return output_path
-    except Exception as e:
-        raise RuntimeError(f"Image conversion failed: {str(e)}")
-
-
-def run_image_convert(input_path: Path, target_ext: str) -> Path:
-    """
-    Convert between image formats using Pillow (JPG <-> PNG).
-    """
-    output_path = CONVERTED_DIR / (input_path.stem + f".{target_ext}")
-    try:
-        with Image.open(input_path) as img:
             # Convert RGBA to RGB for JPEG
             if target_ext.lower() in ["jpg", "jpeg"] and img.mode == "RGBA":
                 rgb_img = Image.new("RGB", img.size, (255, 255, 255))
@@ -144,6 +190,100 @@ def run_image_convert(input_path: Path, target_ext: str) -> Path:
         return output_path
     except Exception as e:
         raise RuntimeError(f"Image conversion failed: {str(e)}")
+
+
+def run_pdf_to_docx(input_path: Path) -> Path:
+    """
+    Convert PDF to DOCX using pdf2docx library.
+    """
+    output_path = CONVERTED_DIR / (input_path.stem + ".docx")
+    try:
+        cv = Converter(str(input_path))
+        cv.convert(str(output_path))
+        cv.close()
+        
+        if not output_path.exists():
+            raise FileNotFoundError(f"Expected DOCX file not found: {output_path.name}")
+        return output_path
+    except Exception as e:
+        raise RuntimeError(f"PDF to DOCX conversion failed: {str(e)}")
+
+
+def run_pdf_to_xlsx(input_path: Path) -> Path:
+    """
+    Convert PDF to XLSX by extracting text and organizing it into rows.
+    This is a basic conversion - extracts text line by line.
+    """
+    output_path = CONVERTED_DIR / (input_path.stem + ".xlsx")
+    try:
+        # Extract text from PDF
+        with open(input_path, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            
+            # Create Excel workbook
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Extracted Data"
+            
+            current_row = 1
+            for page_num, page in enumerate(pdf_reader.pages, 1):
+                text = page.extract_text()
+                lines = text.split('\n')
+                
+                # Add page header
+                ws.cell(row=current_row, column=1, value=f"--- Page {page_num} ---")
+                current_row += 1
+                
+                # Add each line as a row
+                for line in lines:
+                    if line.strip():  # Skip empty lines
+                        ws.cell(row=current_row, column=1, value=line.strip())
+                        current_row += 1
+                
+                # Add blank row between pages
+                current_row += 1
+            
+            wb.save(str(output_path))
+        
+        if not output_path.exists():
+            raise FileNotFoundError(f"Expected XLSX file not found: {output_path.name}")
+        return output_path
+    except Exception as e:
+        raise RuntimeError(f"PDF to XLSX conversion failed: {str(e)}")
+
+
+def run_pdf_to_pptx(input_path: Path) -> Path:
+    """
+    Convert PDF to PPTX by embedding each page as an image in slides.
+    """
+    output_path = CONVERTED_DIR / (input_path.stem + ".pptx")
+    try:
+        # Use LibreOffice to convert PDF to PPTX (it will embed pages as images)
+        return run_libreoffice_convert(input_path, "pptx")
+    except Exception as e:
+        raise RuntimeError(f"PDF to PPTX conversion failed: {str(e)}")
+
+
+def run_image_to_pdf(input_path: Path) -> Path:
+    """
+    Convert image (JPG/PNG) to PDF by embedding it in a PDF page.
+    """
+    output_path = CONVERTED_DIR / (input_path.stem + ".pdf")
+    try:
+        with Image.open(input_path) as img:
+            # Convert to RGB if needed (PDF doesn't support transparency well)
+            if img.mode == "RGBA":
+                rgb_img = Image.new("RGB", img.size, (255, 255, 255))
+                rgb_img.paste(img, mask=img.split()[3] if len(img.split()) == 4 else None)
+                rgb_img.save(output_path, "PDF", resolution=100.0)
+            else:
+                img.save(output_path, "PDF", resolution=100.0)
+        
+        if not output_path.exists():
+            raise FileNotFoundError(f"Expected PDF file not found: {output_path.name}")
+        return output_path
+    except Exception as e:
+        raise RuntimeError(f"Image to PDF conversion failed: {str(e)}")
 
 
 def perform_conversion(
@@ -180,7 +320,20 @@ def perform_conversion(
     if kind == "image_convert":
         return run_image_convert(input_path, target_ext)
 
+    if kind == "pdf_to_docx":
+        return run_pdf_to_docx(input_path)
+
+    if kind == "pdf_to_xlsx":
+        return run_pdf_to_xlsx(input_path)
+
+    if kind == "pdf_to_pptx":
+        return run_pdf_to_pptx(input_path)
+
+    if kind == "image_to_pdf":
+        return run_image_to_pdf(input_path)
+
     # Fallback (should never hit)
     raise RuntimeError("Unknown conversion kind encountered.")
+
 
 

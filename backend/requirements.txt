@@ -3,4 +3,8 @@ uvicorn[standard]
 python-multipart
 pydantic
 Pillow
+pdf2docx
+PyPDF2
+openpyxl
+
 

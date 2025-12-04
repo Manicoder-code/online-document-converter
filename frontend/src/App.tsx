@@ -3,27 +3,34 @@ import { convertDocument, SupportedTargetFormat } from "./api";
 
 // Map of what each file type can convert TO
 const SUPPORTED_CONVERSIONS: Record<string, SupportedTargetFormat[]> = {
-  // PDF can convert to images
-  pdf: ["jpg", "png"],
+  // PDF can convert to all office formats and images
+  pdf: ["docx", "xlsx", "pptx", "jpg", "png"],
   
-  // Office docs can convert to PDF and other office formats
-  doc: ["pdf", "docx"],
-  docx: ["pdf", "doc"],
-  ppt: ["pdf", "pptx"],
-  pptx: ["pdf", "ppt"],
-  xls: ["pdf", "xlsx"],
-  xlsx: ["pdf", "xls"],
+  // Word documents can convert to all formats
+  doc: ["pdf", "docx", "xlsx", "xls", "pptx", "ppt", "jpg", "png"],
+  docx: ["pdf", "doc", "xlsx", "xls", "pptx", "ppt", "jpg", "png"],
   
-  // Images can convert to other image formats
-  jpg: ["png"],
-  jpeg: ["png"],
-  png: ["jpg"],
+  // Excel documents can convert to all formats
+  xls: ["pdf", "xlsx", "docx", "doc", "pptx", "ppt", "jpg", "png"],
+  xlsx: ["pdf", "xls", "docx", "doc", "pptx", "ppt", "jpg", "png"],
+  
+  // PowerPoint documents can convert to all formats
+  ppt: ["pdf", "pptx", "docx", "doc", "xlsx", "xls", "jpg", "png"],
+  pptx: ["pdf", "ppt", "docx", "doc", "xlsx", "xls", "jpg", "png"],
+  
+  // Images can convert to other image formats and PDF
+  jpg: ["png", "pdf"],
+  jpeg: ["png", "pdf"],
+  png: ["jpg", "pdf"],
 };
 
 const FORMAT_LABELS: Record<SupportedTargetFormat, string> = {
   pdf: "PDF Document",
+  doc: "Word 97-2003 (DOC)",
   docx: "Word Document (DOCX)",
+  ppt: "PowerPoint 97-2003 (PPT)",
   pptx: "PowerPoint (PPTX)",
+  xls: "Excel 97-2003 (XLS)",
   xlsx: "Excel (XLSX)",
   jpg: "JPG Image",
   png: "PNG Image",
@@ -398,4 +405,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 

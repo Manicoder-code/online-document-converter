@@ -1,6 +1,6 @@
 // frontend/src/api.ts
 
-export type SupportedTargetFormat = "pdf" | "docx" | "pptx" | "xlsx" | "jpg" | "png";
+export type SupportedTargetFormat = "pdf" | "doc" | "docx" | "ppt" | "pptx" | "xls" | "xlsx" | "jpg" | "png";
 
 /**
  * Decide backend base URL.
@@ -62,5 +62,6 @@ export async function convertDocument(
     throw new Error(err?.message || "Failed to call backend");
   }
 }
+
 
 

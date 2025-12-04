@@ -14,6 +14,7 @@ RUN apt-get update && \
         ghostscript \
         fonts-dejavu \
         locales \
+        poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app/
@@ -24,5 +25,6 @@ COPY . /app
 EXPOSE 8000
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
 
 
