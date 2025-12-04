@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/temp_files:/app/temp_files
+      - ./backend/storage:/app/storage
     restart: unless-stopped
 
   frontend:
@@ -20,4 +20,5 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
 
