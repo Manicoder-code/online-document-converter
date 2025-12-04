@@ -1,0 +1,757 @@
+ at top, #111827 0, #020617 50%, #020617 100%);
+       color: var(--text);
+             min-height: 100vh;
+	           padding: 24px;
+		       }
+
+		           .app-shell {
+			         max-width: 1200px;
+				       margin: 0 auto;
+				             border-radius: 24px;
+					           border: 1px solid rgba(148, 163, 184, 0.3);
+						         background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+							       box-shadow:
+							               0 20px 80px rgba(15, 23, 42, 0.9),
+								               0 0 0 1px rgba(148, 163, 184, 0.2);
+									             overflow: hidden;
+										         }
+
+											     /* Top bar */
+											         .topbar {
+												       display: flex;
+												             justify-content: space-between;
+													           align-items: center;
+														         padding: 18px 24px;
+															       border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+															             background: radial-gradient(circle at top left, #1f2937, #020617);
+																         }
+
+																	     .brand {
+																	           display: flex;
+																		         align-items: center;
+																			       gap: 10px;
+																			           }
+
+																				       .brand-logo {
+																				             width: 32px;
+																					           height: 32px;
+																						         border-radius: 999px;
+																							       background: conic-gradient(from 160deg, #22c55e, #06b6d4, #6366f1, #22c55e);
+																							             display: flex;
+																								           align-items: center;
+																									         justify-content: center;
+																										       box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4);
+																										             font-size: 16px;
+																											           font-weight: 700;
+																												         color: #0b1120;
+																													     }
+
+																													         .brand-text-main {
+																														       font-weight: 700;
+																														             letter-spacing: 0.04em;
+																															         }
+
+																																     .brand-text-sub {
+																																           font-size: 12px;
+																																	         color: var(--muted);
+																																		     }
+
+																																		         .topbar-right {
+																																			       display: flex;
+																																			             gap: 12px;
+																																				           align-items: center;
+																																					       }
+
+																																					           .badge {
+																																						         font-size: 12px;
+																																							       pad<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Online Document Converter | DOC to PDF, PPT, XLSX & More</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-soft: #0b1020;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --accent-strong: #16a34a;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --border: rgba(148, 163, 184, 0.35);
+      --danger: #ef4444;
+      --warning: #f97316;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circleding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+    }
+
+    .primary-btn {
+      border-radius: 999px;
+      padding: 8px 16px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0b1120;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow:
+        0 10px 30px rgba(34, 197, 94, 0.5),
+        0 0 0 1px rgba(22, 163, 74, 0.6);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow:
+        0 14px 40px rgba(34, 197, 94, 0.6),
+        0 0 0 1px rgba(22, 163, 74, 0.7);
+    }
+
+    .primary-btn span.icon {
+      font-size: 16px;
+    }
+
+    /* Content layout */
+    .content {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      padding: 24px;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .left-panel,
+    .right-panel {
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+      padding: 18px 18px 20px;
+    }
+
+    /* Left — Upload + settings */
+    .section-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .section-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(75, 85, 99, 0.8);
+      color: var(--muted);
+    }
+
+    .pill--accent {
+      border-color: rgba(34, 197, 94, 0.9);
+      color: #bbf7d0;
+      background: rgba(22, 163, 74, 0.1);
+    }
+
+    /* Dropzone */
+    .dropzone {
+      marg  width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: radial-gradient(circle at top, rgba(34, 197, 9;
+    }
+
+    /* Hidden input */
+    #fileInput {
+      display:ding: 4px 8px;
+      min-width: 90px;
+      outline: none;
+    }
+
+    .small-input::placeholder {
+      color: #6b7280;
+    }
+
+    .file-remove-btn {
+      font-size: 11px;
+      color: var(--danger);
+      background: transparent;
+      border: none;
+ing-card {
+      border-radius: 14px;
+      border: 1px solid r      padding-top: 12px;
+      border-top: 1px dashed rgba(55,     border-radius: 16px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 12px;
+      background: radial-gradient%;
+      width: 0%;
+      border-radius: inherit;
+      backgro: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 10px;
+    }
+
+    .feature-pill {
+      bo   cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 2px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(34, 197, 94, 0.7);
+      color: #bbf7d0;
+      font-size: 12px;
+      display: none;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
+      z-index: 50;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo">DC</div>
+        <div>
+          <div class="brand-text-main">DocConvert Pro</div>
+          <div class="brand-text-sub">All-in-one online document converter</div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="badge">
+          <span class="badge-dot"></span>
+          Free Tier: 10 files / day
+        </div>
+        <button class="primary-btn" id="upgradeBtn">
+          <span class="icon">⚡</span>
+          Upgrade to Premium
+        </button>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="content">
+      <!-- Left panel: upload + settings -->
+      <section class="left-panel">
+        <div class="section-title-row">
+          <div>
+            <div class="section-title">Upload & Convert</div>
+            <div class="section-subtitle">
+              Convert DOC, DOCX, PPT, XLSX, images, and more to PDF or other formats.
+            </div>
+          </div>
+          <div class="pill-group">
+            <div class="pill pill--accent">No installation</div>
+            <div class="pill">Secure upload</div>
+            <div class="pill">Supports: DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, PNG</div>
+          </div>
+        </div>
+
+        <!-- Dropzone -->
+        <label class="dropzone" id="dropzone">
+          <div class="dropzone-icon">⬆️</div>
+          <div>
+            <div class="dropzone-text-main">Drop files here or click to upload</div>
+            <div class="dropzone-text-sub">
+              Max file size: 25 MB per file. Multiple files supported.
+            </div>
+          </div>
+          <div class="dropzone-cta">
+            <span class="dropzone-cta-icon">📂</span>
+            Browse files
+          </div>
+          <input id="fileInput" type="file" multiple />
+        </label>
+
+        <!-- File list -->
+        <div class="file-list" id="fileList"></div>
+
+        <!-- Settings -->
+        <div class="settings-grid">
+          <div class="setting-card">
+            <div class="setting-label">Output format</div>
+            <div class="setting-main">Convert to</div>
+            <select id="globalOutputFormat" class="setting-select">
+              <option value="pdf">PDF (.pdf)</option>
+              <option value="docx">Word (.docx)</option>
+              <option value="pptx">PowerPoint (.pptx)</option>
+              <option value="xlsx">Excel (.xlsx)</option>
+              <option value="jpg">Image (.jpg)</option>
+              <option value="png">Image (.png)</option>
+            </select>
+          </div>
+
+          <div class="setting-card">
+            <div class="setting-label">Quality</div>
+            <div class="setting-main">Conversion quality</div>
+            <select id="qualitySelect" class="setting-select">
+              <option value="standard">Standard (recommended)</option>
+              <option value="high">High quality</option>
+              <option value="compressed">Compressed (smaller size)</option>
+            </select>
+          </div>
+
+          <div class="setting-card">
+            <div class="setting-label">Pages</div>
+            <div class="setting-main">Page range</div>
+            <select id="pageSelect" class="setting-select">
+              <option value="all">All pages</option>
+              <option value="first">First page only</option>
+              <option value="custom">Custom (e.g., 1-3,5)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Convert bar -->
+        <div class="convert-bar">
+          <div>
+            <div class="summary" id="summaryText">
+              No files selected. Upload to start.
+            </div>
+            <div class="convert-meta">
+              Conversions are simulated on frontend now. Backend API will be integrated later.
+            </div>
+          </div>
+          <div>
+            <button class="primary-btn convert-btn" id="convertBtn">
+              <span class="icon">🔁</span>
+              Convert Now
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right panel: progress + history -->
+      <section class="right-panel">
+        <div class="right-section-title">Conversion Status</div>
+        <div class="right-section-subtitle">
+          Track progress and download converted files once backend is connected.
+        </div>
+
+        <div class="progress-card">
+          <div class="progress-top-row">
+            <div class="progress-label">Overall progress</div>
+            <div class="progress-percentage" id="progressPercent">0%</div>
+          </div>
+          <div class="progress-bar-outer">
+            <div class="progress-bar-inner" id="progressBar"></div>
+          </div>
+          <div class="progress-meta-row">
+            <span id="progressMetaLeft">Idle</span>
+            <span id="progressMetaRight">0 / 0 files</span>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div class="history-list" id="historyList"></div>
+
+        <!-- Feature pills -->
+        <div class="feature-pills">
+          <div class="feature-pill"><strong>Secure:</strong> Intended HTTPS upload</div>
+          <div class="feature-pill"><strong>Multi-format:</strong> DOC, PPT, XLS, images</div>
+          <div class="feature-pill"><strong>Ready for backend:</strong> API integration layer</div>
+          <div class="feature-pill"><strong>Scalable:</strong> Can be containerized (Docker)</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer inside shell -->
+    <footer class="app-footer">
+      <div>© <span id="yearSpan"></span> DocConvert Pro. All rights reserved.</div>
+      <div class="footer-links">
+        <span class="footer-link" id="privacyLink">Privacy</span>
+        <span class="footer-link" id="termsLink">Terms</span>
+        <span class="footer-link" id="apiDocsLink">API docs (future)</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const dropzone = document.getElementById("dropzone");
+    const fileListEl = document.getElementById("fileList");
+    const convertBtn = document.getElementById("convertBtn");
+    const summaryText = document.getElementById("summaryText");
+    const globalOutputFormat = document.getElementById("globalOutputFormat");
+    const progressBar = document.getElementById("progressBar");
+    const progressPercent = document.getElementById("progressPercent");
+    const progressMetaLeft = document.getElementById("progressMetaLeft");
+    const progressMetaRight = document.getElementById("progressMetaRight");
+    const historyList = document.getElementById("historyList");
+    const toastEl = document.getElementById("toast");
+    const yearSpan = document.getElementById("yearSpan");
+    yearSpan.textContent = new Date().getFullYear();
+
+    let files = [];
+    let isConverting = false;
+
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.style.display = "block";
+      setTimeout(() => {
+        toastEl.style.display = "none";
+      }, 2300);
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return "0 B";
+      const k = 1024;
+      const sizes = ["B", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    }
+
+    function getFileExtension(name) {
+      const parts = name.split(".");
+      if (parts.length < 2) return "";
+      return parts[parts.length - 1].toUpperCase();
+    }
+
+    function renderFiles() {
+      fileListEl.innerHTML = "";
+      if (!files.length) {
+        summaryText.textContent = "No files selected. Upload to start.";
+        return;
+      }
+
+      files.forEach((fileWrapper, index) => {
+        const file = fileWrapper.file;
+        const ext = getFileExtension(file.name);
+        const item = document.createElement("div");
+        item.className = "file-item";
+
+        const icon = document.createElement("div");
+        icon.className = "file-type-icon";
+        icon.textContent = ext || "DOC";
+
+        const info = document.createElement("div");
+        info.className = "file-info";
+
+        const name = document.createElement("div");
+        name.className = "file-name";
+        name.textContent = file.name;
+
+        const meta = document.createElement("div");
+        meta.className = "file-meta";
+        meta.textContent = `${formatBytes(file.size)} • ${
+          fileWrapper.outputFormat.toUpperCase()
+        }`;
+
+        const status = document.createElement("div");
+        status.className = "file-status";
+        status.textContent = fileWrapper.status;
+
+        info.appendChild(name);
+        info.appendChild(meta);
+        info.appendChild(status);
+
+        const actions = document.createElement("div");
+        actions.className = "file-actions";
+
+        const select = document.createElement("select");
+        select.className = "small-select";
+        ["pdf", "docx", "pptx", "xlsx", "jpg", "png"].forEach((fmt) => {
+          const opt = document.createElement("option");
+          opt.value = fmt;
+          opt.textContent = fmt.toUpperCase();
+          if (fmt === fileWrapper.outputFormat) opt.selected = true;
+          select.appendChild(opt);
+        });
+        select.addEventListener("change", (e) => {
+          files[index].outputFormat = e.target.value;
+          renderFiles();
+        });
+
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "file-remove-btn";
+        removeBtn.textContent = "Remove";
+        removeBtn.addEventListener("click", () => {
+          files.splice(index, 1);
+          renderFiles();
+          updateSummary();
+        });
+
+        actions.appendChild(select);
+        actions.appendChild(removeBtn);
+
+        item.appendChild(icon);
+        item.appendChild(info);
+        item.appendChild(actions);
+
+        fileListEl.appendChild(item);
+      });
+
+      updateSummary();
+    }
+
+    function updateSummary() {
+      if (!files.length) {
+        summaryText.textContent = "No files selected. Upload to start.";
+        progressMetaRight.textContent = "0 / 0 files";
+        return;
+      }
+
+      const totalSize = files.reduce((acc, f) => acc + f.file.size, 0);
+      const outFmt = globalOutputFormat.value.toUpperCase();
+      summaryText.innerHTML = `<strong>${files.length} file${
+        files.length > 1 ? "s" : ""
+      }</strong> selected (${formatBytes(
+        totalSize
+      )}). Global output: <strong>${outFmt}</strong>`;
+
+      progressMetaRight.textContent = `0 / ${files.length} files`;
+    }
+
+    function handleFiles(selectedFiles) {
+      const arr = Array.from(selectedFiles);
+      let added = 0;
+
+      arr.forEach((file) => {
+        if (file.size > 25 * 1024 * 1024) {
+          showToast("Some files were skipped (size > 25 MB).");
+          return;
+        }
+        files.push({
+          file,
+          outputFormat: globalOutputFormat.value,
+          status: "Ready to convert",
+        });
+        added++;
+      });
+
+      if (added > 0) {
+        renderFiles();
+      }
+    }
+
+    dropzone.addEventListener("click", () => fileInput.click());
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = "rgba(34, 197, 94, 0.9)";
+    });
+
+    dropzone.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = "rgba(148, 163, 184, 0.9)";
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = "rgba(148, 163, 184, 0.9)";
+      if (e.dataTransfer.files && e.dataTransfer.files.length) {
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files.length) {
+        handleFiles(e.target.files);
+        fileInput.value = "";
+      }
+    });
+
+    globalOutputFormat.addEventListener("change", () => {
+      files = files.map((f) => ({
+        ...f,
+        outputFormat: globalOutputFormat.value,
+      }));
+      renderFiles();
+    });
+
+    convertBtn.addEventListener("click", () => {
+      if (!files.length) {
+        showToast("Please upload at least one file.");
+        return;
+      }
+      if (isConverting) {
+        showToast("Conversion already in progress...");
+        return;
+      }
+
+      simulateConversion();
+    });
+
+    function simulateConversion() {
+      isConverting = true;
+      let currentFileIndex = 0;
+      let progress = 0;
+      const totalSteps = files.length * 10;
+
+      files = files.map((f) => ({ ...f, status: "Queued..." }));
+      renderFiles();
+
+      progressBar.style.width = "0%";
+      progressPercent.textContent = "0%";
+      progressMetaLeft.textContent = "Starting conversion...";
+      progressMetaRight.textContent = `0 / ${files.length} files`;
+
+      historyList.innerHTML = "";
+
+      const timer = setInterval(() => {
+        progress++;
+        const percent = Math.min(100, Math.round((progress / totalSteps) * 100));
+        progressBar.style.width = percent + "%";
+        progressPercent.textContent = percent + "%";
+
+        const completedFiles = Math.min(
+          files.length,
+          Math.floor(progress / 10)
+        );
+        progressMetaRight.textContent = `${completedFiles} / ${files.length} files`;
+
+        files = files.map((f, idx) => {
+          if (idx < completedFiles) {
+            return { ...f, status: "Converted (simulated)" };
+          }
+          if (idx === completedFiles) {
+            return { ...f, status: "Converting..." };
+          }
+          return { ...f, status: "Queued..." };
+        });
+        renderFiles();
+
+        if (progress >= totalSteps) {
+          clearInterval(timer);
+          isConverting = false;
+          progressBar.style.width = "100%";
+          progressPercent.textContent = "100%";
+          progressMetaLeft.textContent =
+            "Completed (frontend simulation only - connect API for real conversions).";
+          progressMetaRight.textContent = `${files.length} / ${files.length} files`;
+
+          buildHistory();
+          showToast("Conversion completed (simulated). Backend can be added next.");
+        }
+      }, 200);
+    }
+
+    function buildHistory() {
+      historyList.innerHTML = "";
+      files.forEach((f) => {
+        const item = document.createElement("div");
+        item.className = "history-item";
+
+        const main = document.createElement("div");
+        main.className = "history-main";
+
+        const fileName = document.createElement("div");
+        fileName.className = "history-file";
+        fileName.textContent = f.file.name;
+
+        const meta = document.createElement("div");
+        meta.textContent = `→ ${f.outputFormat.toUpperCase()} • Simulated`;
+
+        main.appendChild(fileName);
+        main.appendChild(meta);
+
+        const right = document.createElement("div");
+        right.style.display = "flex";
+        right.style.flexDirection = "column";
+        right.style.alignItems = "flex-end";
+        right.style.gap = "4px";
+
+        const badge = document.createElement("div");
+        badge.className = "history-badge";
+        badge.textContent = "Ready (simulated)";
+
+        const btn = document.createElement("button");
+        btn.className = "history-download-btn";
+        btn.textContent = "Download";
+        btn.addEventListener("click", () => {
+          showToast(
+            "Backend not connected yet. Add API to enable real downloads."
+          );
+        });
+
+        right.appendChild(badge);
+        right.appendChild(btn);
+
+        item.appendChild(main);
+        item.appendChild(right);
+        historyList.appendChild(item);
+      });
+    }
+
+    document.getElementById("upgradeBtn").addEventListener("click", () => {
+      showToast("Billing/Upgrade screen not implemented yet.");
+    });
+
+    document.getElementById("privacyLink").addEventListener("click", () => {
+      showToast("Privacy policy page can be added as a separate route.");
+    });
+
+    document.getElementById("termsLink").addEventListener("click", () => {
+      showToast("Terms of service page can be added later.");
+    });
+
+    document.getElementById("apiDocsLink").addEventListener("click", () => {
+      showToast("API documentation endpoint can be exposed from backend.");
+    });
+  </script>
+</body>
+</html>
+
