@@ -1,9 +1,11 @@
 # backend/converters.py
+import os
 import subprocess
 from pathlib import Path
 from typing import Literal
 
-STORAGE_DIR = Path("/app/storage")
+# Use /app/storage in Docker, or local ./storage for development
+STORAGE_DIR = Path(os.environ.get("STORAGE_DIR", "./storage"))
 UPLOAD_DIR = STORAGE_DIR / "uploads"
 CONVERTED_DIR = STORAGE_DIR / "converted"
 
@@ -19,7 +21,6 @@ CONVERSION_MAP: dict[tuple[str, str], ConversionKind] = {
     ("pdf", "pptx"): "libreoffice",
     ("pdf", "xlsx"): "libreoffice",
     ("pdf", "jpg"): "image",
-    ("pdf", "jpeg"): "image",
     ("pdf", "png"): "image",
     ("doc", "pdf"): "libreoffice",
     ("docx", "pdf"): "libreoffice",
@@ -27,7 +28,6 @@ CONVERSION_MAP: dict[tuple[str, str], ConversionKind] = {
     ("pptx", "pdf"): "libreoffice",
     ("xls", "pdf"): "libreoffice",
     ("xlsx", "pdf"): "libreoffice",
-    # add more later as needed
 }
 
 
@@ -66,14 +66,13 @@ def run_libreoffice_convert(input_path: Path, target_ext: str) -> Path:
 
 def run_pdf_to_images(input_path: Path, target_ext: str) -> Path:
     """
-    Convert first page of PDF to a single JPG/PNG using ImageMagick 'magick'
-    or GraphicsMagick, or pdftoppm. Here we assume ImageMagick.
+    Convert first page of PDF to a single JPG/PNG using ImageMagick.
     """
     output_path = CONVERTED_DIR / (input_path.stem + f".{target_ext}")
-    # Example using ImageMagick (page 0 only):
+    # ImageMagick command to convert first page only
     cmd = [
-        "magick",
-        str(input_path) + "[0]",  # first page
+        "convert",
+        f"{input_path}[0]",  # first page
         str(output_path),
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)

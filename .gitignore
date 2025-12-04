@@ -14,10 +14,12 @@ frontend/dist/
 
 # Temp files
 backend/temp_files/
+backend/storage/
 *.log
 
 # IDE
 .vscode/
 .idea/
 .DS_Store
+
 

@@ -3,7 +3,7 @@ import uuid
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -30,15 +30,28 @@ def health():
     return {"status": "ok"}
 
 
+def cleanup_files(input_path: Path, output_path: Path):
+    """Delete temporary files after conversion."""
+    try:
+        if input_path.exists():
+            input_path.unlink()
+        if output_path.exists():
+            output_path.unlink()
+    except Exception as e:
+        # Log error but don't fail the request
+        print(f"Cleanup error: {e}")
+
+
 @app.post("/convert")
 async def convert_file(
+    background_tasks: BackgroundTasks,
     file: Annotated[UploadFile, File(..., description="File to convert")],
     target_format: Annotated[str, Form(..., description="Target format, e.g. pdf, docx")],
 ):
     # 1) Validate target format
     target_format = target_format.lower().strip()
 
-    if target_format not in {"pdf", "docx", "pptx", "xlsx", "jpg", "jpeg", "png"}:
+    if target_format not in {"pdf", "docx", "pptx", "xlsx", "jpg", "png"}:
         raise HTTPException(
             status_code=400,
             detail=f"Target format '{target_format}' is not supported.",
@@ -88,31 +101,16 @@ async def convert_file(
             detail="Unexpected error during conversion.",
         ) from e
 
-    # 5) Build a simple download URL
-    download_url = f"/download/{file_id}?ext={output_path.suffix.lstrip('.')}"
-    return {
-        "status": "success",
-        "file_id": file_id,
-        "download_url": download_url,
-        "message": f"Converted {original_name} to .{target_format} successfully.",
-    }
-
-
-@app.get("/download/{file_id}")
-def download_converted_file(file_id: str, ext: str):
-    ext = ext.lower().lstrip(".")
-    output_path = CONVERTED_DIR / f"{file_id}.{ext}"
-
-    if not output_path.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="Converted file not found. It may have expired or was deleted.",
-        )
-
-    # You can set content_type explicitly based on ext if you want
+    # 5) Return the converted file directly
+    converted_filename = f"{Path(original_name).stem}.{target_format}"
+    
+    # Schedule cleanup after response is sent
+    background_tasks.add_task(cleanup_files, input_path, output_path)
+    
     return FileResponse(
         path=str(output_path),
-        filename=output_path.name,
+        filename=converted_filename,
+        media_type="application/octet-stream",
     )
 
 
@@ -123,4 +121,5 @@ async def http_exception_handler(request, exc: HTTPException):
         status_code=exc.status_code,
         content={"status": "error", "detail": exc.detail},
     )
+
 
