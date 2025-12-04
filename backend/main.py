@@ -51,7 +51,7 @@ async def convert_file(
     # 1) Validate target format
     target_format = target_format.lower().strip()
 
-    if target_format not in {"pdf", "docx", "pptx", "xlsx", "jpg", "png"}:
+    if target_format not in {"pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "jpg", "jpeg", "png"}:
         raise HTTPException(
             status_code=400,
             detail=f"Target format '{target_format}' is not supported.",
@@ -121,5 +121,6 @@ async def http_exception_handler(request, exc: HTTPException):
         status_code=exc.status_code,
         content={"status": "error", "detail": exc.detail},
     )
+
 
 
