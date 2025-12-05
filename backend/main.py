@@ -3,7 +3,7 @@ import uuid
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -11,9 +11,45 @@ from converters import (
     UPLOAD_DIR,
     CONVERTED_DIR,
     perform_conversion,
+    merge_pdfs,
+    split_pdf,
+    compress_pdf,
 )
 
+# Auth & DB imports
+from db import SessionLocal, engine, Base
+from models import User
+from schemas import UserCreate, UserLogin, UserOut, Token
+from crud import get_user_by_email, create_user, authenticate_user
+from auth import create_access_token
+from sqlalchemy.orm import Session
+
 app = FastAPI(title="Online Document Converter")
+
+# Create tables
+Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+@app.post("/signup", response_model=UserOut)
+def signup(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = get_user_by_email(db, user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    new_user = create_user(db, user.email, user.password)
+    return new_user
+
+@app.post("/login", response_model=Token)
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = authenticate_user(db, user.email, user.password)
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    access_token = create_access_token({"sub": db_user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 # 🔐 CORS – adjust origins if you deploy on a domain
 app.add_middleware(
@@ -123,4 +159,165 @@ async def http_exception_handler(request, exc: HTTPException):
     )
 
 
+@app.post("/merge")
+async def merge_pdf_files(
+    background_tasks: BackgroundTasks,
+    files: list[UploadFile] = File(..., description="PDF files to merge"),
+):
+    """Merge multiple PDF files into one."""
+    if len(files) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="At least 2 PDF files are required for merging.",
+        )
+    
+    # Save uploaded files
+    saved_paths = []
+    try:
+        for file in files:
+            if not file.filename or not file.filename.lower().endswith('.pdf'):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"All files must be PDF format. Invalid file: {file.filename}",
+                )
+            
+            contents = await file.read()
+            file_id = uuid.uuid4().hex
+            input_path = UPLOAD_DIR / f"{file_id}.pdf"
+            input_path.write_bytes(contents)
+            saved_paths.append(input_path)
+        
+        # Merge PDFs
+        output_path = merge_pdfs(saved_paths)
+        
+        # Schedule cleanup
+        for path in saved_paths:
+            background_tasks.add_task(cleanup_files, path, Path())
+        background_tasks.add_task(cleanup_files, Path(), output_path)
+        
+        return FileResponse(
+            path=str(output_path),
+            filename="merged.pdf",
+            media_type="application/pdf",
+        )
+    
+    except HTTPException:
+        # Cleanup on error
+        for path in saved_paths:
+            if path.exists():
+                path.unlink()
+        raise
+    except Exception as e:
+        # Cleanup on error
+        for path in saved_paths:
+            if path.exists():
+                path.unlink()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Merge failed: {str(e)}",
+        )
+
+
+@app.post("/split")
+async def split_pdf_file(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(..., description="PDF file to split"),
+    page_ranges: str = Form(..., description="Page ranges, e.g., '1-3,5,7-9'"),
+):
+    """Split a PDF file into multiple PDFs based on page ranges."""
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(
+            status_code=400,
+            detail="File must be a PDF.",
+        )
+    
+    # Save uploaded file
+    contents = await file.read()
+    file_id = uuid.uuid4().hex
+    input_path = UPLOAD_DIR / f"{file_id}.pdf"
+    input_path.write_bytes(contents)
+    
+    try:
+        # Split PDF
+        output_paths = split_pdf(input_path, page_ranges)
+        
+        # For simplicity, return the first split file
+        # In production, you might want to zip them or return multiple files
+        if not output_paths:
+            raise HTTPException(
+                status_code=400,
+                detail="No pages matched the specified ranges.",
+            )
+        
+        first_output = output_paths[0]
+        
+        # Schedule cleanup
+        background_tasks.add_task(cleanup_files, input_path, Path())
+        for path in output_paths:
+            if path != first_output:
+                background_tasks.add_task(cleanup_files, Path(), path)
+        background_tasks.add_task(cleanup_files, Path(), first_output)
+        
+        return FileResponse(
+            path=str(first_output),
+            filename=first_output.name,
+            media_type="application/pdf",
+        )
+    
+    except ValueError as e:
+        if input_path.exists():
+            input_path.unlink()
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        if input_path.exists():
+            input_path.unlink()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Split failed: {str(e)}",
+        )
+
+
+@app.post("/compress")
+async def compress_pdf_file(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(..., description="PDF file to compress"),
+    quality: str = Form("medium", description="Compression quality: low, medium, or high"),
+):
+    """Compress a PDF file."""
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(
+            status_code=400,
+            detail="File must be a PDF.",
+        )
+    
+    # Save uploaded file
+    contents = await file.read()
+    file_id = uuid.uuid4().hex
+    input_path = UPLOAD_DIR / f"{file_id}.pdf"
+    input_path.write_bytes(contents)
+    
+    try:
+        # Compress PDF
+        output_path = compress_pdf(input_path, quality)
+        
+        # Schedule cleanup
+        background_tasks.add_task(cleanup_files, input_path, output_path)
+        
+        return FileResponse(
+            path=str(output_path),
+            filename=f"compressed_{file.filename}",
+            media_type="application/pdf",
+        )
+    
+    except ValueError as e:
+        if input_path.exists():
+            input_path.unlink()
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        if input_path.exists():
+            input_path.unlink()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Compression failed: {str(e)}",
+        )
 
