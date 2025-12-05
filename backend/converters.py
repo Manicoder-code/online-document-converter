@@ -336,4 +336,137 @@ def perform_conversion(
     raise RuntimeError("Unknown conversion kind encountered.")
 
 
+# ============================================================================
+# PDF MERGE, SPLIT, and COMPRESS
+# ============================================================================
+
+def merge_pdfs(file_paths: list[Path]) -> Path:
+    """Merge multiple PDF files into one."""
+    if not file_paths:
+        raise ValueError("No PDF files provided for merging.")
+    
+    if len(file_paths) < 2:
+        raise ValueError("At least 2 PDF files are required for merging.")
+    
+    # Verify all files are PDFs
+    for file_path in file_paths:
+        if file_path.suffix.lower() != ".pdf":
+            raise ValueError(f"File {file_path.name} is not a PDF.")
+    
+    # Create merged PDF
+    merger = PyPDF2.PdfMerger()
+    
+    try:
+        for file_path in file_paths:
+            merger.append(str(file_path))
+        
+        # Save merged PDF
+        output_path = CONVERTED_DIR / f"merged_{file_paths[0].stem}.pdf"
+        with open(output_path, "wb") as output_file:
+            merger.write(output_file)
+        
+        merger.close()
+        return output_path
+    
+    except Exception as e:
+        merger.close()
+        raise RuntimeError(f"Failed to merge PDFs: {str(e)}")
+
+
+def split_pdf(file_path: Path, page_ranges: str) -> list[Path]:
+    """
+    Split a PDF into multiple files based on page ranges.
+    page_ranges format: "1-3,5,7-9" (pages are 1-indexed)
+    Returns a list of paths to the split PDF files.
+    """
+    if file_path.suffix.lower() != ".pdf":
+        raise ValueError("File must be a PDF.")
+    
+    try:
+        reader = PyPDF2.PdfReader(str(file_path))
+        total_pages = len(reader.pages)
+        
+        # Parse page ranges
+        ranges = []
+        for part in page_ranges.split(","):
+            part = part.strip()
+            if "-" in part:
+                start, end = part.split("-")
+                start, end = int(start), int(end)
+                if start < 1 or end > total_pages or start > end:
+                    raise ValueError(f"Invalid page range: {part}")
+                ranges.append((start - 1, end))  # Convert to 0-indexed
+            else:
+                page = int(part)
+                if page < 1 or page > total_pages:
+                    raise ValueError(f"Invalid page number: {page}")
+                ranges.append((page - 1, page))  # Convert to 0-indexed
+        
+        # Create split PDFs
+        output_paths = []
+        for i, (start, end) in enumerate(ranges):
+            writer = PyPDF2.PdfWriter()
+            for page_num in range(start, end):
+                writer.add_page(reader.pages[page_num])
+            
+            output_path = CONVERTED_DIR / f"{file_path.stem}_part{i+1}.pdf"
+            with open(output_path, "wb") as output_file:
+                writer.write(output_file)
+            
+            output_paths.append(output_path)
+        
+        return output_paths
+    
+    except ValueError as e:
+        raise ValueError(str(e))
+    except Exception as e:
+        raise RuntimeError(f"Failed to split PDF: {str(e)}")
+
+
+def compress_pdf(file_path: Path, quality: str = "medium") -> Path:
+    """
+    Compress a PDF using Ghostscript.
+    quality: "low", "medium", "high" (lower quality = smaller file size)
+    """
+    if file_path.suffix.lower() != ".pdf":
+        raise ValueError("File must be a PDF.")
+    
+    # Ghostscript quality settings
+    quality_map = {
+        "low": "/screen",      # 72 dpi, smallest file
+        "medium": "/ebook",    # 150 dpi, balanced
+        "high": "/printer",    # 300 dpi, best quality
+    }
+    
+    if quality not in quality_map:
+        quality = "medium"
+    
+    gs_quality = quality_map[quality]
+    output_path = CONVERTED_DIR / f"{file_path.stem}_compressed.pdf"
+    
+    # Ghostscript command
+    gs_cmd = [
+        "gs",
+        "-sDEVICE=pdfwrite",
+        "-dCompatibilityLevel=1.4",
+        f"-dPDFSETTINGS={gs_quality}",
+        "-dNOPAUSE",
+        "-dQUIET",
+        "-dBATCH",
+        f"-sOutputFile={output_path}",
+        str(file_path),
+    ]
+    
+    try:
+        result = subprocess.run(gs_cmd, check=True, capture_output=True, text=True)
+        
+        if not output_path.exists():
+            raise RuntimeError("Ghostscript did not produce output file.")
+        
+        return output_path
+    
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Ghostscript failed: {e.stderr}")
+    except Exception as e:
+        raise RuntimeError(f"Failed to compress PDF: {str(e)}")
 

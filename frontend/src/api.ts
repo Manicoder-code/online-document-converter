@@ -26,6 +26,88 @@ const BACKEND_BASE_URL = getBackendBaseUrl();
 
 console.log("[api] Using backend base URL:", BACKEND_BASE_URL);
 
+export async function mergePDFs(files: File[]): Promise<Blob> {
+  const url = `${BACKEND_BASE_URL}/merge`;
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const textBody = await response.text().catch(() => "");
+      console.error("[api] Backend error response:", response.status, textBody);
+      throw new Error(
+        `Backend error ${response.status}${textBody ? `: ${textBody}` : ""}`
+      );
+    }
+
+    return await response.blob();
+  } catch (err: any) {
+    console.error("[api] Fetch failed:", err);
+    throw new Error(err?.message || "Failed to call backend");
+  }
+}
+
+export async function splitPDF(file: File, pageRanges: string): Promise<Blob> {
+  const url = `${BACKEND_BASE_URL}/split`;
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("page_ranges", pageRanges);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const textBody = await response.text().catch(() => "");
+      console.error("[api] Backend error response:", response.status, textBody);
+      throw new Error(
+        `Backend error ${response.status}${textBody ? `: ${textBody}` : ""}`
+      );
+    }
+
+    return await response.blob();
+  } catch (err: any) {
+    console.error("[api] Fetch failed:", err);
+    throw new Error(err?.message || "Failed to call backend");
+  }
+}
+
+export async function compressPDF(file: File, quality: string): Promise<Blob> {
+  const url = `${BACKEND_BASE_URL}/compress`;
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("quality", quality);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const textBody = await response.text().catch(() => "");
+      console.error("[api] Backend error response:", response.status, textBody);
+      throw new Error(
+        `Backend error ${response.status}${textBody ? `: ${textBody}` : ""}`
+      );
+    }
+
+    return await response.blob();
+  } catch (err: any) {
+    console.error("[api] Fetch failed:", err);
+    throw new Error(err?.message || "Failed to call backend");
+  }
+}
+
 export async function convertDocument(
   file: File,
   targetFormat: SupportedTargetFormat
