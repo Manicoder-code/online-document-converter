@@ -838,12 +838,12 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Supported Formats - Enhanced */}
-                <div className="formats-section enhanced-formats-section" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div className="section-header" style={{ textAlign: 'center', width: '100%', maxWidth: 900, margin: '0 auto' }}>
-                    <h2 className="section-title gradient-text">Support for All Major Formats</h2>
-                    <p className="section-subtitle">Convert between <b>15+</b> file formats with ease and flexibility</p>
+                <div className="formats-section enhanced-formats-section" style={{ width: '100%', maxWidth: 1100, margin: '64px auto 48px auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '4px solid #667eea', borderRadius: '24px', background: 'linear-gradient(180deg, #f7fafc 90%, #fff 100%)', boxShadow: '0 6px 32px 0 #667eea22', padding: '36px 0', boxSizing: 'border-box' }}>
+                  <div className="section-header" style={{ textAlign: 'center', width: '100%', maxWidth: 900, margin: '0 auto 32px auto' }}>
+                    <h2 className="section-title gradient-text" style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '10px' }}>Support for All Major Formats</h2>
+                    <p className="section-subtitle" style={{ fontSize: '1.15rem', color: '#4a5568', marginBottom: 0 }}>Convert between <b>15+</b> file formats with ease and flexibility</p>
                   </div>
-                  <div className="formats-showcase" style={{ width: '100%', maxWidth: 900, margin: '0 auto', justifyContent: 'center' }}>
+                  <div className="formats-showcase formats-row" style={{ width: '100%', maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '18px', marginTop: '0', flexWrap: 'nowrap', boxSizing: 'border-box' }}>
                     {[
                       { name: 'PDF', icon: '📄', color: '#e53e3e', desc: 'Portable Document Format' },
                       { name: 'Word', icon: '📝', color: '#2b6cb0', desc: 'DOC, DOCX' },
@@ -852,45 +852,48 @@ const App: React.FC = () => {
                       { name: 'JPG', icon: '🖼️', color: '#805ad5', desc: 'JPEG Image' },
                       { name: 'PNG', icon: '🎨', color: '#d69e2e', desc: 'PNG Image' }
                     ].map((format) => (
-                      <div key={format.name} className="format-card" style={{ borderColor: format.color, boxShadow: `0 4px 16px 0 ${format.color}22` }}>
-                        <div className="format-card-icon" style={{ color: format.color }}>{format.icon}</div>
-                        <div className="format-card-title">{format.name}</div>
-                        <div className="format-card-desc">{format.desc}</div>
+                      <div key={format.name} className="format-card" style={{ borderColor: format.color, boxShadow: `0 4px 16px 0 ${format.color}22`, flex: '0 0 120px', minWidth: '120px', maxWidth: '120px', background: 'linear-gradient(180deg, #f7fafc 80%, #fff 100%)', margin: '0', padding: '24px 8px 16px 8px', height: '100%' }}>
+                        <div className="format-card-icon" style={{ color: format.color, fontSize: '2.7rem', marginBottom: '12px' }}>{format.icon}</div>
+                        <div className="format-card-title" style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '4px' }}>{format.name}</div>
+                        <div className="format-card-desc" style={{ fontSize: '1.05rem', color: '#718096' }}>{format.desc}</div>
                       </div>
                     ))}
                   </div>
                   <style>{`
                     .enhanced-formats-section {
-                      margin: 48px 0 32px 0;
+                      margin: 64px 0 48px 0;
                       width: 100%;
                       display: flex;
                       flex-direction: column;
                       align-items: center;
                       justify-content: center;
                     }
-                    .formats-showcase {
-                      display: grid;
-                      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-                      gap: 32px;
-                      justify-items: center;
-                      align-items: stretch;
-                      margin-top: 32px;
+                    .formats-row {
+                      display: flex;
+                      flex-direction: row;
+                      justify-content: center;
+                      align-items: flex-start;
+                      gap: 40px;
+                      margin-top: 0;
                       width: 100%;
                       max-width: 900px;
                       margin-left: auto;
                       margin-right: auto;
+                      flex-wrap: nowrap;
                     }
                     .format-card {
-                      background: #fff;
+                      background: linear-gradient(180deg, #f7fafc 80%, #fff 100%);
                       border: 2.5px solid #e2e8f0;
                       border-radius: 18px;
-                      padding: 32px 18px 20px 18px;
-                      min-width: 140px;
-                      max-width: 200px;
+                      padding: 28px 12px 18px 12px;
+                      min-width: 120px;
+                      max-width: 150px;
                       text-align: center;
                       transition: transform 0.18s, box-shadow 0.18s;
                       cursor: pointer;
                       position: relative;
+                      flex: 0 0 140px;
+                      margin: 0;
                     }
                     .format-card:hover {
                       transform: translateY(-8px) scale(1.04);
@@ -898,17 +901,17 @@ const App: React.FC = () => {
                       border-color: #667eea;
                     }
                     .format-card-icon {
-                      font-size: 2.6rem;
-                      margin-bottom: 10px;
+                      font-size: 2.3rem;
+                      margin-bottom: 8px;
                       filter: drop-shadow(0 2px 8px #0001);
                     }
                     .format-card-title {
                       font-weight: 700;
-                      font-size: 1.15rem;
-                      margin-bottom: 4px;
+                      font-size: 1.08rem;
+                      margin-bottom: 2px;
                     }
                     .format-card-desc {
-                      font-size: 0.98rem;
+                      font-size: 0.95rem;
                       color: #718096;
                     }
                     .gradient-text {
@@ -918,19 +921,21 @@ const App: React.FC = () => {
                       background-clip: text;
                       text-fill-color: transparent;
                     }
-                    @media (max-width: 700px) {
-                      .formats-showcase {
-                        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                    @media (max-width: 900px) {
+                      .formats-row {
                         gap: 18px;
                         max-width: 98vw;
+                        flex-wrap: wrap;
+                        justify-content: center;
                       }
                       .format-card {
-                        padding: 20px 8px 14px 8px;
-                        min-width: 100px;
-                        max-width: 140px;
+                        padding: 18px 6px 10px 6px;
+                        min-width: 90px;
+                        max-width: 110px;
+                        flex: 0 0 90px;
                       }
                       .format-card-icon {
-                        font-size: 2rem;
+                        font-size: 1.5rem;
                       }
                     }
                   `}</style>
