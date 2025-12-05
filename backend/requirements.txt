@@ -6,5 +6,10 @@ Pillow
 pdf2docx
 PyPDF2
 openpyxl
-
+email-validator
+sqlalchemy
+psycopg2-binary
+bcrypt==4.0.1
+passlib==1.7.4
+python-jose[cryptography]
 
