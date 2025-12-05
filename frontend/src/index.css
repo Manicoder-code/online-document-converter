@@ -2,6 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  cursor: default;
 }
 
 body {
@@ -16,6 +17,31 @@ body {
 
 #root {
   min-height: 100vh;
+}
+
+/* Custom cursor styles */
+button,
+a,
+.tool-card,
+.benefit-item,
+.step,
+.format-tag,
+.footer-section li,
+.upload-area,
+.upload-button,
+.convert-button,
+.remove-button,
+.format-select {
+  cursor: pointer !important;
+}
+
+input,
+textarea {
+  cursor: text !important;
+}
+
+input[type="file"] {
+  cursor: pointer !important;
 }
 
 @keyframes fadeIn {
