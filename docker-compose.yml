@@ -1,3 +1,4 @@
+
 services:
   backend:
     build: ./backend
@@ -7,7 +8,7 @@ services:
     volumes:
       - ./backend/storage:/app/storage
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/docconverter
+      - DATABASE_URL=postgresql://postgres:postgres@doc-converter-db:5432/docconverter
     depends_on:
       - db
     restart: unless-stopped
@@ -16,24 +17,23 @@ services:
     build: ./frontend
     container_name: doc-converter-frontend
     ports:
-      - "5173:5173"
+      - "80:80"
     depends_on:
       - backend
     restart: unless-stopped
 
   db:
-    image: postgres:15
+    image: postgres:16
     container_name: doc-converter-db
-    restart: always
     environment:
+      POSTGRES_DB: docconverter
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: docconverter
-    ports:
-      - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
 volumes:
-  pgdata:
+  postgres_data:
+
 
